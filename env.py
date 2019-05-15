@@ -10,7 +10,7 @@ class chessboard:
                   281474976710656, 4503599627370496, 72057594037927936, 1152921504606846976]
     real_value = [0.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 
                   256.0, 512.0, 1024.0, 2048.0, 4096.0, 8192.0, 16384.0, 32768.0]
-    my_reward = [0, 0, 0, 1, 1, 4, 4, 16, 32,  64, 256, 1024, 4096, 4096, 4096]
+    my_reward = [32, -16, -4, 0, 2, 2, 4, 16, 128,  256, 256, 1024, 4096, 4096, 4096]
     boardhash = 0.0
     score = 0.0
     n_features = 16
@@ -65,6 +65,22 @@ class chessboard:
                 temp+=self.map[i][j] * self.hash_table[i * 4 + j]
         return temp
 
+    def complex_getreward(self):
+        [rows, cols] = self.map.shape
+        reward = 0
+        for i in range(rows):
+            for j in range(cols):
+                reward += self.my_reward[int(self.map[i][j])]
+        a = self.map.flatten()
+        b = sorted(a, reverse = True)
+        c = sorted(a, reverse = False)
+        for i in range(16):
+            reward -=(abs(self.real_value[(int)(a[i])] - self.real_value[(int)(b[i])]) 
+                    + abs(self.real_value[(int)(a[i])] - self.real_value[(int)(c[i])]))*2
+        
+
+        return (reward/2048.0)
+    
     def render(self):
         self.maintain()
         return map.copy().flatten()
@@ -73,33 +89,44 @@ class chessboard:
         if(self.move(self.actions[int(actions[0])]) == True):
             x = self.put_rand()
             arr = self.map.copy()
-            return(arr.flatten(), self.getreward(x), 0, True) 
+            for i in range(4):
+                for j in range(4):
+                    arr[i][j] = self.real_value[int(arr[i][j])]
+            #return(arr.flatten(), self.getreward(x), 0, True) 
+            return(arr.flatten(), self.complex_getreward(), 0, True) 
         else:
             if(self.move(self.actions[int(actions[1])]) == True):
                 x = self.put_rand()
                 arr = self.map.copy()
-                return(arr.flatten(), self.getreward(x),1,  True)   
+                #return(arr.flatten(), self.getreward(x),1,  True) 
+                return(arr.flatten(), self.complex_getreward(),1,  True)     
             else:
                 if(self.move(self.actions[int(actions[2])]) == True):
                     x = self.put_rand()
                     arr = self.map.copy()                   
-                    return(arr.flatten(), self.getreward(x),2,  True)  
+                    #return(arr.flatten(), self.getreward(x),2,  True)  
+                    return(arr.flatten(), self.complex_getreward(),2,  True) 
                 else:
                     if(self.move(self.actions[int(actions[3])]) == True):
                         x = self.put_rand()
                         arr = self.map.copy()
-                        return(arr.flatten(), self.getreward(x),3,  True) 
+                        #return(arr.flatten(), self.getreward(x),3,  True) 
+                        return(arr.flatten(), self.complex_getreward(),3,  True) 
                     else:
                         arr = self.map.copy()
-                        return(arr.flatten(), 0, 0, False)
+                        return(arr.flatten(), -1000, 0, False)
 
     def getreward(self, x):
         [rows, cols] = self.map.shape
         reward = 0
-        reward += self.real_value[int(self.map.max())]
+        #reward += self.real_value[int(self.map.max())]
         for i in range(rows):
             for j in range(cols):
-                reward += self.real_value[int(self.map[i][j])]
+                reward += self.my_reward[int(self.map[i][j])]
+        #reward+= 5 * self.real_value[int(self.map[0][0])]
+        #reward+= 5 * self.real_value[int(self.map[0][3])]
+        #reward+= 5 * self.real_value[int(self.map[3][0])]
+        #reward+= 5 * self.real_value[int(self.map[3][3])]
         return (reward/2048.0)
         #return(self.my_reward[int(self.map.max())] - self.my_reward[int(self.orimap.max())])
 

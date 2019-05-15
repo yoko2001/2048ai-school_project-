@@ -12,7 +12,7 @@ class DQN(object):
         self, 
         n_actions, n_feature,
         learning_rate = 0.01, reward_decay = 0.9, e_greedy = 0.9,
-        replace_target_iter = 100, memory_size = 100000, batch_size = 32,
+        replace_target_iter = 100, memory_size = 200000, batch_size = 32,
         e_greedy_increment = None, output_graph = False, epsilon_increment = None
     ):  
         self.n_actions = n_actions
@@ -56,19 +56,37 @@ class DQN(object):
 
         w_initializer, b_initializer = tf.random_normal_initializer(0., 0.3), tf.constant_initializer(0.1)
 
-        # ------------------ build evaluate_net ------------------
+        # # ------------------ build evaluate_net ------------------
+        # with tf.variable_scope('eval_net'):
+        #     e1 = tf.layers.dense(self.s, 16, tf.nn.relu, kernel_initializer=w_initializer,
+        #                          bias_initializer=b_initializer, name='e1')
+        #     self.q_eval = tf.layers.dense(e1, self.n_actions, kernel_initializer=w_initializer,
+        #                                   bias_initializer=b_initializer, name='q')
+        
+        # # ------------------ build target_net ------------------
+        # with tf.variable_scope('target_net'):
+        #     t1 = tf.layers.dense(self.s_, 16, tf.nn.relu, kernel_initializer=w_initializer,
+        #                          bias_initializer=b_initializer, name='t1')
+        #     self.q_next = tf.layers.dense(t1, self.n_actions, kernel_initializer=w_initializer,
+        #                                   bias_initializer=b_initializer, name='t2')
+
+        # ------------------ build evaluate_net2 ------------------
         with tf.variable_scope('eval_net'):
             e1 = tf.layers.dense(self.s, 16, tf.nn.relu, kernel_initializer=w_initializer,
                                  bias_initializer=b_initializer, name='e1')
-            self.q_eval = tf.layers.dense(e1, self.n_actions, kernel_initializer=w_initializer,
+            e2 = tf.layers.dense(self.s, 10, tf.nn.relu, kernel_initializer=w_initializer,
+                                 bias_initializer=b_initializer, name='e2')                     
+            self.q_eval = tf.layers.dense(e2, self.n_actions, kernel_initializer=w_initializer,
                                           bias_initializer=b_initializer, name='q')
 
         # ------------------ build target_net ------------------
         with tf.variable_scope('target_net'):
             t1 = tf.layers.dense(self.s_, 16, tf.nn.relu, kernel_initializer=w_initializer,
                                  bias_initializer=b_initializer, name='t1')
-            self.q_next = tf.layers.dense(t1, self.n_actions, kernel_initializer=w_initializer,
-                                          bias_initializer=b_initializer, name='t2')
+            t2 = tf.layers.dense(self.s_, 10, tf.nn.relu, kernel_initializer=w_initializer,
+                                 bias_initializer=b_initializer, name='t2')                     
+            self.q_next = tf.layers.dense(t2, self.n_actions, kernel_initializer=w_initializer,
+                                          bias_initializer=b_initializer, name='qr')
 
         with tf.variable_scope('q_target'):
             q_target = self.r + self.gamma * tf.reduce_max(self.q_next, axis= 1, name="Qmax_s_")  #shape = (None,)
@@ -135,7 +153,7 @@ class DQN(object):
         # increasing epsilon
         self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
         self.learn_step_counter += 1
-
+    
     def show_cost(self):
         import matplotlib.pyplot as plt
         plt.plot(np.arange(len(self.cost_his)), self.cost_his)

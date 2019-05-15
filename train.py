@@ -40,10 +40,10 @@ if __name__ == "__main__":
 
     RL = DQN(GAME.n_actions, GAME.n_features,
                       learning_rate=0.01,
-                      reward_decay=0.9,
-                      e_greedy=0.9,
-                      replace_target_iter=200,
-                      memory_size=2000,
+                      reward_decay=0.93,
+                      e_greedy=0.93,
+                      replace_target_iter=100,
+                      memory_size=20000,
                       # output_graph=True
                       )
    
